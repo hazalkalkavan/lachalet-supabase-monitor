@@ -26,8 +26,6 @@ jobs:
           token = os.environ.get("HEARTBEAT_TOKEN", "").strip()
           if not token:
               raise SystemExit("HEARTBEAT_TOKEN secret is missing or empty")
-          if "\r" in token or "\n" in token:
-              raise SystemExit("HEARTBEAT_TOKEN contains an unexpected line break")
 
           url = "https://ccyxwckxbbwwmnootfkq.supabase.co/functions/v1/supabase-heartbeat"
           request = urllib.request.Request(
