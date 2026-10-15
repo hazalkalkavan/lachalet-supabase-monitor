@@ -1,24 +1,25 @@
 name: Supabase daily health check
+
 on:
   schedule:
     - cron: '17 8 * * *'
   workflow_dispatch:
+
 jobs:
   check:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Check configured Supabase endpoint
+      - name: Check Supabase endpoint
         env:
           HEALTH_URL: ${{ secrets.SUPABASE_HEALTH_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
-          if [ -z "$HEALTH_URL" ]; then
-            echo "::error::Set SUPABASE_HEALTH_URL in repository Actions secrets."
-            exit 1
-          fi
-          case "$HEALTH_URL" in
-            https://*) ;;
-            *) echo "::error::Health URL must use HTTPS."; exit 1 ;;
-          esac
-          curl --fail --silent --show-error --location --max-time 30 --retry 2 --output /dev/null "$HEALTH_URL"
-          echo "Health endpoint responded successfully."
+          test -n "$HEALTH_URL"
+          test -n "$SUPABASE_KEY"
+          curl --fail --silent --show-error \
+            --retry 2 \
+            --max-time 30 \
+            -H "apikey: $SUPABASE_KEY" \
+            "$HEALTH_URL"
+          echo "Supabase endpoint check completed"
