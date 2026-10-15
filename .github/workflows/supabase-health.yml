@@ -14,15 +14,36 @@ jobs:
         env:
           HEARTBEAT_TOKEN: ${{ secrets.HEARTBEAT_TOKEN }}
         run: |
-          test -n "$HEARTBEAT_TOKEN"
+          python3 - <<'PY'
+          import os
+          import urllib.request
+          import urllib.error
 
-          curl --fail --silent --show-error \
-            --retry 2 \
-            --max-time 30 \
-            --request POST \
-            --header "Content-Type: application/json" \
-            --header "x-heartbeat-token: $HEARTBEAT_TOKEN" \
-            --data '{}' \
-            "https://ccyxwckxbbwwmnootfkq.supabase.co/functions/v1/supabase-heartbeat"
+          token = os.environ.get("HEARTBEAT_TOKEN", "").strip()
+          if not token:
+              raise SystemExit("HEARTBEAT_TOKEN secret is missing or empty")
+          if "\r" in token or "\n" in token:
+              raise SystemExit("HEARTBEAT_TOKEN contains an unexpected line break")
 
-          echo "Database heartbeat completed"
+          url = "https://ccyxwckxbbwwmnootfkq.supabase.co/functions/v1/supabase-heartbeat"
+          request = urllib.request.Request(
+              url,
+              data=b"{}",
+              headers={
+                  "Content-Type": "application/json",
+                  "x-heartbeat-token": token,
+              },
+              method="POST",
+          )
+          try:
+              with urllib.request.urlopen(request, timeout=30) as response:
+                  print("Heartbeat HTTP status:", response.status)
+                  print("Database heartbeat completed")
+          except urllib.error.HTTPError as error:
+              print("Heartbeat HTTP status:", error.code)
+              print("Server response:", error.read(500).decode("utf-8", "replace"))
+              raise SystemExit(1)
+          except Exception as error:
+              print("Heartbeat request failed:", type(error).__name__, str(error))
+              raise SystemExit(1)
+          PY
