@@ -23,7 +23,7 @@ jobs:
           import urllib.request
           import urllib.error
 
-          token = os.environ.get("HEARTBEAT_TOKEN", "").strip()
+          token = os.environ.get("HEARTBEAT_TOKEN", "").replace(chr(13), "").replace(chr(10), "").strip()
           if not token:
               raise SystemExit("HEARTBEAT_TOKEN secret is missing or empty")
 
