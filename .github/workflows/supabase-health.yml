@@ -10,16 +10,19 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Check Supabase endpoint
+      - name: Update database heartbeat
         env:
-          HEALTH_URL: ${{ secrets.SUPABASE_HEALTH_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          HEARTBEAT_TOKEN: ${{ secrets.HEARTBEAT_TOKEN }}
         run: |
-          test -n "$HEALTH_URL"
-          test -n "$SUPABASE_KEY"
+          test -n "$HEARTBEAT_TOKEN"
+
           curl --fail --silent --show-error \
             --retry 2 \
             --max-time 30 \
-            -H "apikey: $SUPABASE_KEY" \
-            "$HEALTH_URL"
-          echo "Supabase endpoint check completed"
+            --request POST \
+            --header "Content-Type: application/json" \
+            --header "x-heartbeat-token: $HEARTBEAT_TOKEN" \
+            --data '{}' \
+            "https://ccyxwckxbbwwmnootfkq.supabase.co/functions/v1/supabase-heartbeat"
+
+          echo "Database heartbeat completed"
