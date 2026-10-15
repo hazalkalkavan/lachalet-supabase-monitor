@@ -1,4 +1,5 @@
 name: Supabase daily health check
+# Recheck after synchronized heartbeat secrets
 
 on:
   schedule:
